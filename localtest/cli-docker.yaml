@@ -1,0 +1,47 @@
+version: "3.8"
+networks:
+  fabric_network:
+    external:
+      name: fabric_network
+services:
+  cli:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 0
+    image: hyperledger/fabric-tools:2.1
+    hostname: cli.com
+    networks:
+      fabric_network:
+        aliases:
+        - cli.com
+    environment:
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+    - GOPATH=/opt/gopath
+    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    # - FABRIC_LOGGING_SPEC=DEBUG
+    - CORE_PEER_ID=cli.com
+    - CORE_PEER_ADDRESS=peer1.org1.com:7051
+    - CORE_PEER_LOCALMSPID=Org1MSP
+    - CORE_PEER_TLS_ENABLED=true
+    - GO111MODULE=on
+    - GOPROXY=https://goproxy.cn
+    - GOSUMDB=off
+    - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.com/users/Admin@org1.com/tls/ca.crt
+    - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.com/users/Admin@org1.com/msp
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: 
+    - /bin/bash
+    - -c
+    - |
+      scripts/createChannel.sh
+      scripts/chaincode.sh
+    volumes:
+    - /var/run/:/host/var/run/
+    - ./chaincode:/opt/gopath/src/github.com/hyperledger/fabric/peer/chaincode
+    - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+    - ./scripts:/opt/gopath/src/github.com/hyperledger/fabric/peer/scripts/
+    - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+    - ./data:/opt/gopath/src/github.com/hyperledger/fabric/peer/data

@@ -1,0 +1,67 @@
+version: "3.8"
+networks:
+  fabric_network:
+    external:
+      name: fabric_network
+services:
+  postgresql:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    image: hyperledger/explorer-db:latest
+    ports:
+    - "5432:5432"
+    hostname: postgresql.explorer.com
+    networks:
+      fabric_network:
+        aliases:
+        - postgresql.explorer.com
+    environment:
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    - DATABASE_DATABASE=fabricexplorer
+    - DATABASE_USERNAME=hppoc
+    - DATABASE_PASSWORD=password
+    volumes:
+    - /var/run/:/host/var/run/
+    - ./data/expolorer/pg_hba.conf:/var/lib/postgresql/data/pg_hba.conf
+    - ./data/expolorer/pgdata:/var/lib/postgresql
+  expolorer:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    image: hyperledger/explorer:latest
+    ports:
+    - "8080:8080"
+    hostname: web.expolorer.com
+    networks:
+      fabric_network:
+        aliases:
+        - web.expolorer.com
+    environment:
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    - DATABASE_HOST=postgresql.explorer.com
+    - DATABASE_DATABASE=fabricexplorer
+    - DATABASE_USERNAME=hppoc
+    - DATABASE_PASSWD=password
+    - LOG_LEVEL_APP=debug
+    - LOG_LEVEL_DB=debug
+    - LOG_LEVEL_CONSOLE=debug
+    - LOG_CONSOLE_STDOUT=true
+    - DISCOVERY_AS_LOCALHOST=false
+    command: sh -c "node /opt/explorer/main.js && tail -f /dev/null"
+    depends_on:
+    - hyperledger_postgresql
+    volumes:
+    - /var/run/:/host/var/run/
+    - ./config.json:/opt/explorer/app/platform/fabric/config.json
+    - ./connection-profile:/opt/explorer/app/platform/fabric/connection-profile
+    - ./crypto-config:/tmp/crypto
+    - ./data/expolorer/wallet:/opt/wallet

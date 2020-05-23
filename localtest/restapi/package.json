@@ -1,0 +1,76 @@
+{
+    "name": "fabcar",
+    "version": "1.0.0",
+    "description": "FabCar application implemented in TypeScript",
+    "engines": {
+        "node": ">=8",
+        "npm": ">=5"
+    },
+    "scripts": {
+        "lint": "tslint -c tslint.json 'src/**/*.ts'",
+        "pretest": "npm run lint",
+        "test": "nyc mocha -r ts-node/register src/**/*.spec.ts",
+        "build": "tsc",
+        "build:watch": "tsc -w",
+        "prepublishOnly": "npm run build"
+    },
+    "engineStrict": true,
+    "author": "Hyperledger",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "fabric-ca-client": "^2.1.0",
+        "fabric-network": "^2.1.0",
+        "body-parser": "^1.18.2",
+        "cookie-parser": "^1.4.3",
+        "cors": "^2.8.4",
+        "express": "^4.16.1",
+        "express-jwt": "^5.3.0",
+        "express-session": "^1.15.6",
+        "log4js": "^0.6.38"
+    },
+    "devDependencies": {
+        "@types/chai": "^4.1.7",
+        "@types/mocha": "^5.2.5",
+        "@types/node": "^10.12.10",
+        "@types/sinon": "^5.0.7",
+        "@types/sinon-chai": "^3.2.1",
+        "chai": "^4.2.0",
+        "mocha": "^5.2.0",
+        "nyc": "^14.1.1",
+        "sinon": "^7.1.1",
+        "sinon-chai": "^3.3.0",
+        "ts-node": "^7.0.1",
+        "tslint": "^5.11.0",
+        "typescript": "^3.1.6",
+        "@types/body-parser": "^1.16.5",
+        "@types/bytebuffer": "^5.0.36",
+        "@types/cors": "^2.8.1",
+        "@types/express-jwt": "0.0.37",
+        "@types/express-session": "^1.15.3",
+        "@types/jsonwebtoken": "^7.2.3",
+        "@types/log4js": "0.0.33",
+        "express-bearer-token": "^2.1.0",
+        "jsonwebtoken": "^8.1.0",
+        "tslint-microsoft-contrib": "^5.0.1"
+    },
+    "nyc": {
+        "extension": [
+            ".ts",
+            ".tsx"
+        ],
+        "exclude": [
+            "coverage/**",
+            "dist/**"
+        ],
+        "reporter": [
+            "text-summary",
+            "html"
+        ],
+        "all": true,
+        "check-coverage": true,
+        "statements": 100,
+        "branches": 100,
+        "functions": 100,
+        "lines": 100
+    }
+}

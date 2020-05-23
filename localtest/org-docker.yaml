@@ -1,0 +1,180 @@
+version: "3.8"
+networks:
+  fabric_network:
+    external:
+      name: fabric_network
+services:
+  ca-org1_org1:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    hostname: ca.org1.com
+    image: hyperledger/fabric-ca:1.4
+    ports:
+    - target: 7054
+      published: 7054
+      protocol: tcp
+      mode: host
+    networks:
+      fabric_network:
+        aliases:
+        - ca.org1.com
+    environment:
+    - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+    - FABRIC_CA_SERVER_CA_NAME=ca-org1
+    - FABRIC_CA_SERVER_TLS_ENABLED=true
+    - FABRIC_CA_SERVER_TLS_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.com-cert.pem
+    - FABRIC_CA_SERVER_TLS_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+    command: sh -c 'fabric-ca-server start --ca.certfile /etc/hyperledger/fabric-ca-server-config/ca.org1.com-cert.pem
+     --ca.keyfile /etc/hyperledger/fabric-ca-server-config/priv_sk
+      -b admin:adminpw -d'
+    volumes:
+    - ./crypto-config/peerOrganizations/org1.com/ca:/etc/hyperledger/fabric-ca-server-config
+    - ./data/ca.org1.com:/etc/hyperledger/fabric-ca-server
+  couchdb1-org1_org1:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    hostname: couchdb1.org1.com
+    image: hyperledger/fabric-couchdb:0.4
+    ports:
+    - "5984:5984"
+    networks:
+      fabric_network:
+        aliases:
+        - couchdb1.org1.com
+    volumes:
+    - ./data/couchdb1.org1.com:/opt/couchdb/data
+  couchdb2-org1_org1:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    hostname: couchdb2.org1.com
+    image: hyperledger/fabric-couchdb:0.4
+    ports:
+    - "6984:5984"
+    networks:
+      fabric_network:
+        aliases:
+        - couchdb2.org1.com
+    volumes:
+    - ./data/couchdb2.org1.com:/opt/couchdb/data
+  peer1_org1:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    hostname: peer1.org1.com
+    image: hyperledger/fabric-peer:2.1
+    ports:
+    - target: 7051
+      published: 7051
+      protocol: tcp
+      mode: host
+    - target: 7052
+      published: 7052
+      protocol: tcp
+      mode: host
+    - target: 7053
+      published: 7053
+      protocol: tcp
+      mode: host
+    networks:
+      fabric_network:
+        aliases:
+        - peer1.org1.com
+    environment:
+    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    - CORE_LOGGING_LEVEL=DEBUG
+    - CORE_PEER_TLS_ENABLED=true
+    - CORE_PEER_GOSSIP_USELEADERELECTION=true
+    - CORE_PEER_GOSSIP_ORGLEADER=false
+    - CORE_PEER_PROFILE_ENABLED=true
+    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    - CORE_PEER_ID=peer1.org1.com
+    - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+    - GOPROXY=https://goproxy.cn
+    - GOSUMDB=off
+    - CORE_PEER_ADDRESS=peer1.org1.com:7051
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.com:7051
+    - CORE_PEER_LOCALMSPID=Org1MSP
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+    - CORE_PEER_GOSSIP_BOOTSTRAP=peer2.org1.com:7051
+    - core_ledger_state_statedatabase=couchdb
+    - core_ledger_state_couchdbconfig_couchdbaddress=couchdb1.org1.com:5984
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+    - /var/run/:/host/var/run/
+    #- ./crypto-config/peerOrganizations/org1.com/peers/peer1.org1.com/msp:/etc/hyperledger/fabric/msp
+    #- ./crypto-config/peerOrganizations/org1.com/peers/peer1.org1.com/tls:/etc/hyperledger/fabric/tls
+    - ./data/peer1.org1.com/config:/etc/hyperledger/fabric
+    - ./data/peer1.org1.com/data:/var/hyperledger
+  peer2_org1:
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+    hostname: peer2.org1.com
+    image: hyperledger/fabric-peer:2.1
+    ports:
+    - target: 7051
+      published: 8051
+      protocol: tcp
+      mode: host
+    - target: 7052
+      published: 8052
+      protocol: tcp
+      mode: host
+    - target: 7053
+      published: 8053
+      protocol: tcp
+      mode: host
+    networks:
+      fabric_network:
+        aliases:
+        - peer2.org1.com
+    environment:
+    - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+    - CORE_LOGGING_LEVEL=DEBUG
+    - CORE_PEER_TLS_ENABLED=true
+    - CORE_PEER_GOSSIP_USELEADERELECTION=true
+    - CORE_PEER_GOSSIP_ORGLEADER=false
+    - CORE_PEER_PROFILE_ENABLED=true
+    - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+    - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+    - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+    - CORE_PEER_ID=peer2.org1.com
+    - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+    - CORE_PEER_ADDRESS=peer2.org1.com:7051
+    - GOPROXY=https://goproxy.cn
+    - GOSUMDB=off
+    - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer2.org1.com:7051
+    - CORE_PEER_LOCALMSPID=Org1MSP
+    - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=fabric_network
+    - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.com:7051
+    - core_ledger_state_statedatabase=couchdb
+    - core_ledger_state_couchdbconfig_couchdbaddress=couchdb2.org1.com:5984
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    command: peer node start
+    volumes:
+    - /var/run/:/host/var/run/
+    #- ./crypto-config/peerOrganizations/org1.com/peers/peer2.org1.com/msp:/etc/hyperledger/fabric/msp
+    #- ./crypto-config/peerOrganizations/org1.com/peers/peer2.org1.com/tls:/etc/hyperledger/fabric/tls
+    - ./data/peer2.org1.com/config:/etc/hyperledger/fabric
+    - ./data/peer2.org1.com/data:/var/hyperledger

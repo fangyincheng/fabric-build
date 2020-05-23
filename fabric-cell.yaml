@@ -1,0 +1,103 @@
+#  cello-nginx: proxy to access operator dashboard service, listen on 8080
+#  cello-operator-dashboard: dashboard service for operators
+#  cello-user-dashboard: user service of cello, listen on 8081
+#  engine: engine service of cello to provide RESTful APIs, listen on 80
+#  cello-mongo: mongo db
+
+version: '3.2'
+services:
+  nginx:
+    image: hyperledger/cello-nginx
+    hostname: cello-nginx
+    container_name: cello-nginx
+    restart: always
+    links:
+    - api-engine
+    ports:
+    - "8082:80"
+    environment:
+    - UWSGI_SERVER_HOST=api-engine
+    - URL_PREFIX=api
+    volumes:
+      - .data/cello/api-engine/media:/var/www/media
+
+  postgres-server:
+    image: postgres:11.1
+    hostname: cello-postgres-server
+    container_name: cello-postgres-server
+    restart: always
+    environment:
+    - POSTGRES_DB=api-engine
+    - POSTGRES_USER=cell_pgs
+    - POSTGRES_PASSWORD=cell_pgs
+    volumes:
+    - ./data/cello/postgres:/var/lib/postgresql
+
+  redis:
+    image: redis:4.0.13
+    hostname: cello-redis
+    container_name: cello-redis
+    volumes:
+    - ./data/cello/redis:/data
+
+  api-engine:
+    image: hyperledger/cello-api-engine
+    hostname: cello-api-engine
+    container_name: cello-api-engine
+    restart: always
+    links:
+    - postgres-server
+    - redis
+    environment:
+    - WEBROOT=api
+    - DEBUG=False
+    - DB_USER=cell_pgs
+    - DB_PASSWORD=cell_pgs
+    - DB_NAME=api-engine
+    - DB_HOST=postgres-server
+    - DB_PORT=5432
+    - ADMIN_TOKEN=api_token
+    - CELERY_BROKER_URL=redis://redis
+    - ADMIN_USERNAME=admin
+    - ADMIN_PASSWORD=adminpw
+    - ADMIN_EMAIL=email
+    - API_VERSION=v1
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - ./data/cello/api-engine/media:/var/www/media
+
+
+  api-engine-tasks:
+    image: hyperledger/cello-api-engine
+    hostname: cello-api-engine-tasks
+    container_name: cello-api-engine-tasks
+    restart: always
+    links:
+    - postgres-server
+    - redis
+    environment:
+    - WEBROOT=api
+    - DEBUG=True
+    - DB_USER=cell_pgs
+    - DB_PASSWORD=cell_pgs
+    - DB_NAME=api-engine
+    - DB_HOST=postgres-server
+    - DB_PORT=5432
+    - ADMIN_TOKEN=api_token
+    - CELERY_BROKER_URL=redis://redis
+    - API_VERSION=v1
+    - DOCKER_HOST=unix://var/run/docker.sock
+    - RUN_MODE=task
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  dashboard:
+    image: hyperledger/cello-dashboard
+    container_name: cello-dashboard
+    links:
+      - nginx
+    environment:
+      - API_PROXY=http://nginx:80/engine
+      - SERVICE_PORT=8082
+    ports:
+      - "8081:80"

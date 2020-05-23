@@ -1,0 +1,72 @@
+{
+	"name": "fabric-network-local",
+	"version": "1.0.0",
+	"license": "Apache-2.0",
+	"client": {
+		"tlsEnable": true,
+		"adminUser": "admin",
+		"adminPassword": "adminpw",
+		"enableAuthentication": false,
+		"organization": "Org1",
+		"connection": {
+			"timeout": {
+				"peer": {
+					"endorser": "300"
+				},
+				"orderer": "300"
+			}
+		}
+	},
+	"channels": {
+		"onechannel": {
+			"orderers": ["orderer1.ordererorg.com","orderer2.ordererorg.com","orderer3.ordererorg.com"],
+			"peers": {
+                "peer1.org1.com": {},
+				"peer2.org1.com": {}
+			},
+			"connection": {
+				"timeout": {
+					"peer": {
+						"endorser": "6000",
+						"eventHub": "6000",
+						"eventReg": "6000"
+					}
+				}
+			}
+		}
+	},
+	"organizations": {
+		"Org1MSP": {
+			"mspid": "Org1MSP",
+			"fullpath": true,
+			"adminPrivateKey": {
+				"path": "/tmp/crypto/peerOrganizations/org1.com/users/Admin@org1.com/msp/keystore/priv_sk"
+			},
+			"signedCert": {
+				"path": "/tmp/crypto/peerOrganizations/org1.com/users/Admin@org1.com/msp/signcerts/Admin@org1.com-cert.pem"
+			}
+		}
+	},
+	"peers": {
+		"peer1.org1.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/org1.com/peers/peer1.org1.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer1.org1.com:7051",
+			"eventUrl": "grpcs://peer1.org1.com:7053",
+			"grpcOptions": {
+				"ssl-target-name-override": "peer1.org1.com"
+			}
+		},
+		"peer2.org1.com": {
+			"tlsCACerts": {
+				"path": "/tmp/crypto/peerOrganizations/org1.com/peers/peer2.org1.com/tls/ca.crt"
+			},
+			"url": "grpcs://peer2.org1.com:7051",
+			"eventUrl": "grpcs://peer2.org1.com:7053",
+			"grpcOptions": {
+				"ssl-target-name-override": "peer2.org1.com"
+			}
+		}
+	}
+}

@@ -1,0 +1,9 @@
+{
+	"network-configs": {
+		"fabric-network-local": {
+			"name": "fabric-network-local",
+			"profile": "./connection-profile/fabric-network-local.json"
+		}
+	},
+	"license": "Apache-2.0"
+}
