@@ -50,7 +50,7 @@
         "@types/jsonwebtoken": "^7.2.3",
         "@types/log4js": "0.0.33",
         "express-bearer-token": "^2.1.0",
-        "jsonwebtoken": "^8.1.0",
+        "jsonwebtoken": "^9.0.0",
         "tslint-microsoft-contrib": "^5.0.1"
     },
     "nyc": {
